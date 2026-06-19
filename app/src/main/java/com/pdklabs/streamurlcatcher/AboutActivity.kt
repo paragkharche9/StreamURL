@@ -33,20 +33,25 @@ class AboutActivity : AppCompatActivity() {
     private fun getLicensesText(): String {
         return """
             Jetpack Media3 (ExoPlayer)
-            Copyright 2024 Google LLC
+            Copyright 2026 Google LLC
             Apache License 2.0
             
             Material Components for Android
-            Copyright 2024 Google LLC
+            Copyright 2026 Google LLC
             Apache License 2.0
             
             AndroidX Libraries
-            Copyright 2024 The Android Open Source Project
+            Copyright 2026 The Android Open Source Project
             Apache License 2.0
             
             Kotlin Standard Library
             Copyright 2010-2024 JetBrains s.r.o.
             Apache License 2.0
+
+            URL Shortening Service
+            This app uses the is.gd API.
+            Special thanks to is.gd for their 
+            excellent and simple service.
         """.trimIndent()
     }
 }
