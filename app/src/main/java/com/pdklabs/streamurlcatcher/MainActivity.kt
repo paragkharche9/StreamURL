@@ -4,12 +4,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -17,14 +16,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.color.DynamicColors
+import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDLRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,18 +33,16 @@ import java.net.URLEncoder
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var toolbar: MaterialToolbar
-    private lateinit var appBarLayout: AppBarLayout
     private lateinit var playerView: PlayerView
     private lateinit var cardContainer: View
+    private lateinit var headerOverlay: View
     private var player: ExoPlayer? = null
     
     private lateinit var tvUrl: TextView
     private lateinit var btnCopy: Button
     private lateinit var btnShare: Button
+    private lateinit var btnSettings: ImageButton
     private var streamUrl: String? = null
-    
-    private var isFullscreen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         DynamicColors.applyToActivitiesIfAvailable(application)
@@ -53,123 +50,88 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         
-        appBarLayout = findViewById(R.id.appBarLayout)
         cardContainer = findViewById(R.id.cardContainer)
+        headerOverlay = findViewById(R.id.headerOverlay)
         
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_content)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            if (!isFullscreen) {
-                v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
-            } else {
-                v.setPadding(0, 0, 0, 0)
-            }
+            headerOverlay.setPadding(headerOverlay.paddingLeft, systemBars.top, headerOverlay.paddingRight, headerOverlay.paddingBottom)
+            v.setPadding(v.paddingLeft, 0, v.paddingRight, systemBars.bottom)
             insets
-        }
-
-        toolbar = findViewById(R.id.toolbar)
-        toolbar.inflateMenu(R.menu.main_menu)
-        toolbar.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_settings -> {
-                    startActivity(Intent(this, AboutActivity::class.java))
-                    true
-                }
-                else -> false
-            }
         }
 
         playerView = findViewById(R.id.playerView)
         tvUrl = findViewById(R.id.tvUrl)
         btnCopy = findViewById(R.id.btnCopy)
         btnShare = findViewById(R.id.btnShare)
+        btnSettings = findViewById(R.id.btnSettings)
 
-        initializePlayer()
+        btnSettings.setOnClickListener {
+            startActivity(Intent(this, AboutActivity::class.java))
+        }
 
-        playerView.setFullscreenButtonClickListener { isFullscreenClick ->
-            toggleFullscreen(isFullscreenClick)
+        tvUrl.setOnClickListener {
+            pasteFromClipboard()
         }
 
         handleIntent(intent)
 
         btnCopy.setOnClickListener {
             streamUrl?.let { url ->
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("Stream URL", url)
-                clipboard.setPrimaryClip(clip)
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Stream URL", url))
                 Toast.makeText(this, "URL Copied", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnShare.setOnClickListener {
-            streamUrl?.let { url ->
-                shortenAndShare(url)
-            }
+            streamUrl?.let { url -> shortenAndShare(url) }
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (isFullscreen) {
-                    toggleFullscreen(false)
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
-                }
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
             }
         })
     }
 
-    private fun toggleFullscreen(fullScreen: Boolean) {
-        isFullscreen = fullScreen
-        
-        val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
-        if (fullScreen) {
-            appBarLayout.visibility = View.GONE
-            cardContainer.visibility = View.GONE
-            
-            // Intelligent orientation based on video dimensions
-            val videoSize = player?.videoSize
-            if (videoSize != null && videoSize.height > videoSize.width) {
-                // For vertical videos, allow portrait rotation
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-            } else {
-                // For horizontal videos, force landscape rotation
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+    override fun onStart() {
+        super.onStart()
+        if (player == null) {
+            initializePlayer()
+            streamUrl?.let { url ->
+                player?.setMediaItem(MediaItem.fromUri(url.toUri()))
+                player?.prepare()
             }
+        }
+    }
 
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            
-            // Adjust playerView to match parent
-            val params = playerView.layoutParams as ViewGroup.MarginLayoutParams
-            params.width = ViewGroup.LayoutParams.MATCH_PARENT
-            params.height = ViewGroup.LayoutParams.MATCH_PARENT
-            params.setMargins(0, 0, 0, 0)
-            playerView.layoutParams = params
+    override fun onPause() {
+        super.onPause()
+        player?.pause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        player?.release()
+        player = null
+    }
+
+    private fun pasteFromClipboard() {
+        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val item = clipboard.primaryClip?.getItemAt(0)
+        val pasteData = item?.text?.toString()
+        if (!pasteData.isNullOrBlank() && pasteData.startsWith("http")) {
+            processUrl(pasteData)
         } else {
-            appBarLayout.visibility = View.VISIBLE
-            cardContainer.visibility = View.VISIBLE
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-            
-            // Reset playerView layout params - ConstraintLayout will handle it
-            val params = playerView.layoutParams as ViewGroup.MarginLayoutParams
-            params.width = 0
-            params.height = 0
-            playerView.layoutParams = params
+            Toast.makeText(this, "No valid URL in clipboard", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun shortenAndShare(originalUrl: String) {
         lifecycleScope.launch {
-            val shortenedUrl = withContext(Dispatchers.IO) {
-                tryShorten(originalUrl, "https://is.gd")
-            }
-
-            val finalUrl = shortenedUrl ?: originalUrl
-            if (shortenedUrl == null) {
-                Toast.makeText(this@MainActivity, "Shortener failed, sharing original", Toast.LENGTH_SHORT).show()
-            }
-
+            val finalUrl = withContext(Dispatchers.IO) { tryShorten(originalUrl) } ?: originalUrl
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, finalUrl)
@@ -178,22 +140,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun tryShorten(originalUrl: String, baseUrl: String): String? {
+    private fun tryShorten(originalUrl: String): String? {
         return try {
-            val apiUrl = "$baseUrl/create.php?format=simple&url=${URLEncoder.encode(originalUrl, "UTF-8")}"
+            val apiUrl = "https://tinyurl.com/api-create.php?url=${URLEncoder.encode(originalUrl, "UTF-8")}"
             val connection = URL(apiUrl).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 4000
-            connection.readTimeout = 4000
-            
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 connection.inputStream.bufferedReader().use { it.readText() }
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        }
+            } else null
+        } catch (_: Exception) { null }
     }
 
     private fun initializePlayer() {
@@ -210,37 +166,48 @@ class MainActivity : AppCompatActivity() {
         val action = intent?.action
         val type = intent?.type
 
-        if (Intent.ACTION_VIEW == action && type?.startsWith("video/") == true) {
-            intent.data?.let { uri ->
-                processUrl(uri.toString())
-            }
+        if (Intent.ACTION_VIEW == action && (type?.startsWith("video/") == true || intent.data?.scheme?.startsWith("http") == true)) {
+            intent.data?.let { uri -> processUrl(uri.toString()) }
         } else if (Intent.ACTION_SEND == action && type == "text/plain") {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { sharedText ->
-                processUrl(sharedText)
-            }
+            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { sharedText -> processUrl(sharedText) }
         }
     }
 
     private fun processUrl(url: String) {
-        streamUrl = url
-        tvUrl.text = url
-        
-        try {
-            val mediaItem = MediaItem.fromUri(Uri.parse(url))
-            player?.setMediaItem(mediaItem)
-            player?.prepare()
-            player?.play()
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error playing video", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            tvUrl.text = "Processing..."
+            
+            val isMediaLink = url.contains(".mp4") || url.contains(".m3u8") || 
+                             url.contains(".mkv") || url.contains(".mov") || 
+                             url.contains(".mpd") || url.contains(".ism")
+
+            val finalUrl = if (url.startsWith("http") && !isMediaLink) {
+                withContext(Dispatchers.IO) {
+                    try {
+                        val request = YoutubeDLRequest(url)
+                        // Reverting to 'best' to ensure a single playable link is returned
+                        // The previous complex string required FFmpeg to merge streams.
+                        request.addOption("-f", "best")
+                        val videoInfo = YoutubeDL.getInstance().getInfo(request)
+                        videoInfo.url ?: url
+                    } catch (_: Exception) { url }
+                }
+            } else url
+
+            streamUrl = finalUrl
+            tvUrl.text = finalUrl
+            
+            try {
+                player?.setMediaItem(MediaItem.fromUri(finalUrl.toUri()))
+                player?.prepare()
+                player?.playWhenReady = true
+                player?.play()
+            } catch (_: Exception) {}
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        releasePlayer()
-    }
-
-    private fun releasePlayer() {
         player?.release()
         player = null
     }

@@ -1,18 +1,34 @@
-.gradle
-/local.properties
-# IntelliJ IDEA
+# Build related
+/build/
+app/build/
+app/release/
+.gradle/
+.externalNativeBuild/
+.cxx/
+/captures/
+
+# IDE related
 .idea/
-!.idea/codeStyles/
-!.idea/inspectionProfiles/
-!.idea/runConfigurations/
-!.idea/vcs.xml
-!.idea/copyright/
 *.iml
 *.ipr
 *.iws
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# Local configuration
 local.properties
+
+# System files
+.DS_Store
+
+# Log files
+*.log
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services
+# google-services.json
+
+# Bundle related
+*.apks
+*.aab
