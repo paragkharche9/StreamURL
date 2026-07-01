@@ -8,7 +8,7 @@ Whether you're using modded social media apps or just need to grab a direct stre
 
 - **URL Catcher**: Seamlessly intercepts video links from other apps via the "Open with" or "Share" menu.
 - **Modern Video Player**: High-performance playback using **Jetpack Media3 (ExoPlayer)**, supporting a wide range of stream formats.
-- **URL Shortening**: Built-in support to shorten long, messy stream URLs using `is.gd` before sharing.
+- **URL Shortegit ning**: Built-in support to shorten long, messy stream URLs using `TinyURL` before sharing.
 - **Material You**: Beautiful, modern UI that supports Dynamic Colors (Android 12+) and full Dark Theme.
 - **Fullscreen Mode**: Immersive viewing experience with aspect-ratio aware rotation.
 - **Privacy Focused**: Lightweight with minimal permissions. No tracking, no history, just a simple utility.
@@ -36,7 +36,7 @@ Whether you're using modded social media apps or just need to grab a direct stre
 
 ## 🙏 Acknowledgments
 
-- **is.gd**: For providing a simple and reliable URL shortening API.
+- **TinyURL**: For providing a simple and reliable URL shortening API.
 - **Jetpack Media3**: For the high-performance ExoPlayer engine.
 
 ## 📄 License

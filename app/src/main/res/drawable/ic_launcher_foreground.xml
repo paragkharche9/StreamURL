@@ -1,34 +1,37 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
 
-    <!-- Outer Frame (thick white line) -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M28,30 C28,26 31,25 34,27 L78,51 C81,53 81,56 78,58 L34,82 C31,84 28,83 28,79 Z" />
-
-    <!-- Inner Solid Triangle -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M42,42 L42,66 L62,54 Z" />
-
-    <!-- Share icon at the top right -->
-    <group android:translateX="75" android:translateY="25">
-        <!-- Connecting circles -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M12,0a4,4 0,1 1,0 8a4,4 0,1 1,0 -8M12,16a4,4 0,1 1,0 8a4,4 0,1 1,0 -8M0,8a5,5 0,1 1,0 10a5,5 0,1 1,0 -10" />
-        <!-- Connecting lines -->
+    <!-- Grouped to center the entire composition perfectly (Viewport is 120x120) -->
+    <group android:translateX="7" android:translateY="11">
+        <!-- Outer Frame (thick white line) -->
         <path
             android:strokeColor="#FFFFFF"
-            android:strokeWidth="4"
+            android:strokeWidth="5"
             android:strokeLineCap="round"
-            android:pathData="M3,12 L12,5 M3,12 L12,19" />
+            android:strokeLineJoin="round"
+            android:pathData="M28,30 C28,26 31,25 34,27 L78,51 C81,53 81,56 78,58 L34,82 C31,84 28,83 28,79 Z" />
+
+        <!-- Inner Solid Triangle -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M42,42 L42,66 L62,54 Z" />
+
+        <!-- Share icon at the top right -->
+        <group android:translateX="60" android:translateY="15">
+            <!-- Connecting circles -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M12,0a4,4 0,1 1,0 8a4,4 0,1 1,0 -8M12,16a4,4 0,1 1,0 8a4,4 0,1 1,0 -8M0,8a5,5 0,1 1,0 10a5,5 0,1 1,0 -10" />
+            <!-- Connecting lines -->
+            <path
+                android:strokeColor="#FFFFFF"
+                android:strokeWidth="4"
+                android:strokeLineCap="round"
+                android:pathData="M3,12 L12,5 M3,12 L12,19" />
+        </group>
     </group>
 
 </vector>

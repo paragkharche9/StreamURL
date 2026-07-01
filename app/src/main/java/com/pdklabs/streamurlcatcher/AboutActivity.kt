@@ -47,11 +47,6 @@ class AboutActivity : AppCompatActivity() {
             Kotlin Standard Library
             Copyright 2010-2024 JetBrains s.r.o.
             Apache License 2.0
-
-            URL Shortening Service
-            This app uses the is.gd API.
-            Special thanks to is.gd for their 
-            excellent and simple service.
         """.trimIndent()
     }
 }
