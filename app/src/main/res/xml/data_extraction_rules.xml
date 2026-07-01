@@ -4,16 +4,10 @@
    for details.
 -->
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <!-- No cloud backup is allowed. -->
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- No device-to-device transfer is allowed. -->
     </device-transfer>
-    -->
 </data-extraction-rules>
