@@ -9,6 +9,7 @@ app/release/
 
 # IDE related
 .idea/
+.kotlin/
 *.iml
 *.ipr
 *.iws
